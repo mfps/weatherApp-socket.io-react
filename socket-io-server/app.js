@@ -2,7 +2,6 @@ import express from 'express';
 import http from 'http';
 import socketIo from 'socket.io';
 import fetch from 'node-fetch';
-import { toAwait } from './helper';
 
 const port = process.env.PORT || 4000;
 const index = require('./routes/index');
@@ -24,15 +23,13 @@ io.on('connection', socket => {
 const getApiAndEmit = async socket => {
   const url =
     'http://api.openweathermap.org/data/2.5/weather?q=Berlin,de&&appid=<the api key>';
-  const [error, response] = await fetch(url)
-    .then(res => res.json())
-    .then(res => res);
+  try {
+    const response = await fetch(url).then(res => res.json()).then(res => res);
 
-  if (error) {
+    socket.emit('FromAPI', response);
+  } catch (error) {
     console.error(`Error: ${error}`);
-    return;
   }
-  socket.emit('FromAPI', res);
 };
 
 server.listen(port, () => console.log(`Listening on port ${port}`));
